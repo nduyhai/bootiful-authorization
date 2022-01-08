@@ -9,13 +9,24 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @EnableWebSecurity
 public class DefaultSecurityConfig {
+  protected static final String[] PUBLIC_ENDPOINTS = {
+    "/v3/api-docs",
+    "/v3/api-docs/**",
+    "/swagger-ui.html",
+    "/swagger-ui/**",
+    "/actuator",
+    "/actuator/**"
+  };
 
   @Bean
   SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .authorizeRequests(authorizeRequests ->
-            authorizeRequests.anyRequest().authenticated()
-        )
+    http.authorizeRequests(
+            authorizeRequests ->
+                authorizeRequests
+                    .antMatchers(PUBLIC_ENDPOINTS)
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
         .formLogin(withDefaults());
     return http.build();
   }
