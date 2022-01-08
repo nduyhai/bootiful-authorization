@@ -2,7 +2,20 @@ server:
   port: 9000
 
 spring:
+  application:
+    name: bootiful-authorization
   datasource:
     url: jdbc:postgresql://localhost:5432/bootiful_authorization
     username: postgres
     password: postgres
+
+  boot:
+    admin:
+      client:
+        url: ${ADMIN_SERVICE:http://localhost:9090}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

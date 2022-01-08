@@ -7,7 +7,7 @@
     <groupId>com.bootiful</groupId>
     <artifactId>bootiful</artifactId>
     <version>0.0.1</version>
-    <relativePath/> <!-- lookup parent from repository -->
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>bootiful-authorization</artifactId>
