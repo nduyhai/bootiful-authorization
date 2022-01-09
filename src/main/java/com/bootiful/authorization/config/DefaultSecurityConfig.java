@@ -15,7 +15,8 @@ public class DefaultSecurityConfig {
     "/swagger-ui.html",
     "/swagger-ui/**",
     "/actuator",
-    "/actuator/**"
+    "/actuator/**",
+    "/oauth2/**"
   };
 
   @Bean
