@@ -1,6 +1,6 @@
 package com.bootiful.authorization.config;
 
-import java.util.UUID;
+import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -9,18 +9,17 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
+import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import com.bootiful.authorization.jose.Jwks;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -41,37 +40,18 @@ public class AuthorizationServerConfig {
 
   @Bean
   public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
-    RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
-        .clientId("greeting-client")
-        .clientSecret("secret")
-        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-        .redirectUri("http://127.0.0.1:8080/login/oauth2/code/messaging-client-oidc")
-        .redirectUri("http://127.0.0.1:8080/authorized")
-        .scope(OidcScopes.OPENID)
-        .scope("greeting.read")
-        .scope("greeting.write")
-        .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
-        .build();
-
-    JdbcRegisteredClientRepository registeredClientRepository = new JdbcRegisteredClientRepository(
-        jdbcTemplate);
-    registeredClientRepository.save(registeredClient);
-
-    return registeredClientRepository;
+    return new JdbcRegisteredClientRepository(jdbcTemplate);
   }
 
   @Bean
-  public OAuth2AuthorizationService authorizationService(JdbcTemplate jdbcTemplate,
-      RegisteredClientRepository registeredClientRepository) {
+  public OAuth2AuthorizationService authorizationService(
+      JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {
     return new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
   }
 
   @Bean
-  public OAuth2AuthorizationConsentService authorizationConsentService(JdbcTemplate jdbcTemplate,
-      RegisteredClientRepository registeredClientRepository) {
+  public OAuth2AuthorizationConsentService authorizationConsentService(
+      JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {
     return new JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository);
   }
 
@@ -87,5 +67,13 @@ public class AuthorizationServerConfig {
     return ProviderSettings.builder().issuer("http://localhost:9000").build();
   }
 
+  @Bean
+  public UserDetailsManager userDetailsManager(DataSource dataSource) {
+    return new JdbcUserDetailsManager(dataSource);
+  }
 
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 }
